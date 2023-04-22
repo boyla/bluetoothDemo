@@ -39,11 +39,11 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.3.2"
     }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+//    packaging {
+//        resources {
+//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//        }
+//    }
 }
 
 dependencies {
@@ -61,7 +61,6 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.glide)
     implementation(libs.accompanist.glide)
-    implementation(libs.scanner)
     implementation(libs.easypermissions)
 //    implementation(libs.adapterhelper)
 //    implementation(libs.promptdialog)
@@ -69,6 +68,8 @@ dependencies {
     implementation(libs.paging.runtime.ktx)
     implementation(libs.coil)
     implementation(libs.accompanist.coil)
+    implementation(libs.runtime.livedata )
+    implementation(files("libs\\bluetoothkit.jar"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
@@ -77,6 +78,5 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
-
 
 }

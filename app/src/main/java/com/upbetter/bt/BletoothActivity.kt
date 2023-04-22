@@ -1,7 +1,7 @@
 package com.upbetter.bt
 
+import android.Manifest.permission.*
 import android.app.DownloadManager
-import android.bluetooth.BluetoothClass.Device
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,36 +9,24 @@ import android.content.IntentFilter
 import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.text.TextUtils
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,27 +40,32 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LoadState
-import androidx.paging.compose.collectAsLazyPagingItems
-import com.google.accompanist.coil.rememberCoilPainter
+import com.upbetter.bt.bt.BtUtils
+import com.upbetter.bt.bt.STATE_ERROR
+import com.upbetter.bt.bt.STATE_IDLE
+import com.upbetter.bt.bt.STATE_LOADING
 import com.upbetter.bt.data.BtDevice
 import com.upbetter.bt.util.ToastUtil
 import kotlinx.coroutines.launch
+import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
 
 class BletoothActivity : ComponentActivity() {
 
     val TAG = "BletoothActivity"
     lateinit var downloadManager: DownloadManager
+    lateinit var vm: BtModel
+    var permissions = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ToastUtil.ctx = this
         setContent {
-            val vm = BtModel(application)
+            vm = BtModel(application)
             MaterialTheme {
-                BtDeviceList(vm)
+                checkPermissions()
             }
         }
         //注册广播，监听下载状态
@@ -83,9 +76,12 @@ class BletoothActivity : ComponentActivity() {
 
     @Composable
     fun BtDeviceList(vm: BtModel) {
-        val devices = vm.rawData.collectAsLazyPagingItems()
-        when (devices.loadState.refresh) {
-            is LoadState.NotLoading -> LazyColumn(
+        val li by vm.btDevices.collectAsState()
+        if (li.size > 0) {
+            BtUtils.mLoadState = STATE_IDLE
+        }
+        when (BtUtils.mLoadState) {
+            STATE_IDLE -> LazyColumn(
                 modifier = Modifier
                     .background(
                         color = Color(
@@ -98,17 +94,16 @@ class BletoothActivity : ComponentActivity() {
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                items(devices.itemCount) { item ->
-                    DeviceItem(devices[item])
+                items(li.size) { item ->
+                    DeviceItem(li[item])
                 }
             }
 
-            is LoadState.Error -> ErrorPage(
-                (devices.loadState.refresh as LoadState.Error).error.message ?: ""
-            ) { devices.refresh() }
+            STATE_ERROR -> ErrorPage("unknow error") { }
 
-            is LoadState.Loading -> LoadingPage()
+            STATE_LOADING -> LoadingPage()
         }
+
     }
 
     @Composable
@@ -340,5 +335,61 @@ class BletoothActivity : ComponentActivity() {
 //                    )
 //                    context.startActivity(installIntent)
 //                }
+
+    // todo 蓝牙动态申请权限
+    @Composable
+    private fun checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 版本大于等于 Android12 时
+            // 只包括蓝牙这部分的权限，其余的需要什么权限自己添加
+            permissions.add(BLUETOOTH_SCAN)
+            permissions.add(BLUETOOTH_ADVERTISE)
+            permissions.add(BLUETOOTH_CONNECT)
+        } else {
+            // Android 版本小于 Android12 及以下版本
+            permissions.add(ACCESS_COARSE_LOCATION)
+            permissions.add(ACCESS_FINE_LOCATION)
+        }
+        val arr = permissions.toTypedArray()
+        if (permissions.size > 0) {
+            if (EasyPermissions.hasPermissions(this, *(arr))) {
+                BtDeviceList(vm)
+            } else {
+                // 没有申请过权限，现在去申请
+                /**
+                 *@param host Context对象
+                 *@param rationale  权限弹窗上的提示语。
+                 *@param requestCode 请求权限的唯一标识码
+                 *@param perms 一系列权限
+                 */
+                EasyPermissions.requestPermissions(
+                    this,
+                    "申请权限",
+                    1001,
+                    *(arr))
+//                for (per in permissions) {
+//                    EasyPermissions.requestPermissions(
+//                        this,
+//                        "申请权限",
+//                        1001,
+//                        per)
+//                    ActivityCompat.requestPermissions(this, arrayOf(per), 1001)
+//                }
+
+
+                ErrorPage(msg = "请开启蓝牙权限")
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
 }
 

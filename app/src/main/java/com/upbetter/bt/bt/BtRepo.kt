@@ -9,9 +9,9 @@ object BtRepo {
     suspend fun getDevices(ctx: Context): List<BtDevice> {
         return withContext(Dispatchers.Default) {
             val ret = mutableListOf<BtDevice>()
-            // scan devices
 
             ret
         }
     }
+
 }
