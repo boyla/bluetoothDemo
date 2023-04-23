@@ -12,6 +12,7 @@ import com.inuker.bluetooth.library.connect.listener.BluetoothStateListener
 import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.search.response.SearchResponse
+import com.upbetter.bt.util.ToastUtil
 import java.util.concurrent.CopyOnWriteArrayList
 
 
@@ -65,11 +66,16 @@ object BtHelper {
                 if (deviceLi.size == 0) {
                     deviceLi.add(found)
                 } else {
+                    var addIn = false
                     for ((i, e) in deviceLi.withIndex()) {
                         if (found.rssi >= e.rssi) {
                             deviceLi.add(i, found)
+                            addIn = true
                             break
                         }
+                    }
+                    if (!addIn) {
+                        deviceLi.add(found)
                     }
                 }
                 onListUpdate()
@@ -102,9 +108,14 @@ object BtHelper {
             override fun onConnectStatusChanged(mac: String?, status: Int) {
                 if (status == STATUS_CONNECTED) {
                     currentConnectDevice = ret
+                    Log.d(TAG, "onConnectStatusChanged STATUS_CONNECTED")
+                    ToastUtil.showToast(ToastUtil.ctx!!,"连接成功")
                 } else if (status == STATUS_DISCONNECTED) {
                     currentConnectDevice = null
+                    ToastUtil.showToast(ToastUtil.ctx!!,"连接断开")
+                    Log.d(TAG, "onConnectStatusChanged STATUS_DISCONNECTED")
                 }
+                updateCurrentInfo?.invoke()
             }
         })
 
@@ -118,6 +129,8 @@ object BtHelper {
             }
         }
     }
+
+    var updateCurrentInfo: (() -> Unit)? = null
 
     fun disconnect(ret: SearchResult) {
         mClient.disconnect(ret.address)

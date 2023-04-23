@@ -1,8 +1,10 @@
 package com.upbetter.bt.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 
+@SuppressLint("StaticFieldLeak")
 object ToastUtil {
     private var toast: Toast? = null
     var ctx:Context? = null

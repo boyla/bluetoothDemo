@@ -35,7 +35,7 @@
             android:id="@+id/tvMacLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="30dp"
+            android:layout_marginLeft="16dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:text="Mac："
@@ -53,7 +53,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="30dp"
+            android:layout_marginLeft="16dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:text="已发现："

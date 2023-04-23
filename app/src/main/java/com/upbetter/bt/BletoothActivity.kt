@@ -51,6 +51,7 @@ class BletoothActivity : AppCompatActivity() {
     lateinit var tvSum: TextView
     lateinit var rvDevice: RecyclerView
     lateinit var adp: DeviceAdapter
+    var currentPos = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +83,20 @@ class BletoothActivity : AppCompatActivity() {
             rvDevice.layoutManager = LinearLayoutManager(this)
             adp = DeviceAdapter(this, BtHelper.deviceLi)
             rvDevice.adapter = adp
+            BtHelper.updateCurrentInfo = {
+                tvName.text = BtHelper.currentConnectDevice?.name ?: ""
+                tvMac.text = BtHelper.currentConnectDevice?.address ?: ""
+                if (currentPos != -1) {
+                    adp.notifyItemChanged(currentPos)
+                }
+                if (BtHelper.currentConnectDevice != null) {
+                    for ((i, e) in BtHelper.deviceLi.withIndex()) {
+                        if (e == BtHelper.currentConnectDevice) {
+                            adp.notifyItemChanged(i)
+                        }
+                    }
+                }
+            }
             BtHelper.scan(App.getInstance()!!.applicationContext) {
                 rvDevice.post {
                     adp.notifyDataSetChanged()
@@ -108,165 +123,9 @@ class BletoothActivity : AppCompatActivity() {
         return false
     }
 
-//    @Composable
-//    fun BtDeviceList(vm: BtModel) {
-////        lifecycleScope.launchWhenStarted{
-////            vm.btDevices.collect { li ->
-////                Log.d(BtUtils.TAG, "render BtDeviceList size: ${li.size}")
-////                if (li.size > 0) {
-////                    BtUtils.mLoadState = STATE_IDLE
-////                }
-////                when (BtUtils.mLoadState) {
-////                    STATE_IDLE -> LazyColumn(
-////                        modifier = Modifier
-////                            .background(
-////                                color = Color(
-////                                    0xf5f5f5
-////                                )
-////                            )
-////                            .padding(0.dp, 0.dp)
-////                            .clipToBounds()
-////                            .fillMaxSize(),
-////                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
-////                        verticalArrangement = Arrangement.spacedBy(20.dp),
-////                    ) {
-////                        items(li.size) { item ->
-////                            DeviceItem(li[item])
-////                        }
-////                    }
-////
-////                    STATE_ERROR -> ErrorPage("unknow error") { }
-////
-////                    STATE_LOADING -> LoadingPage()
-////                }
-////            }
-////        }
-//
-//        val li by vm.btDevices.collectAsState()
-////        val li = remember {
-////            rawli
-////        }
-//        Log.d(BtUtils.TAG, "render BtDeviceList size: ${li.size}")
-//        if (li.size > 0) {
-//            BtUtils.mLoadState = STATE_IDLE
-//        }
-//        when (BtUtils.mLoadState) {
-//            STATE_IDLE -> LazyColumn(
-//                modifier = Modifier
-//                    .background(
-//                        color = Color(
-//                            0xf5f5f5
-//                        )
-//                    )
-//                    .padding(0.dp, 0.dp)
-//                    .clipToBounds()
-//                    .fillMaxSize(),
-//                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
-//                verticalArrangement = Arrangement.spacedBy(20.dp),
-//            ) {
-//                items(li.size) { item ->
-//                    DeviceItem(li[item])
-//                }
-//            }
-//
-//            STATE_ERROR -> ErrorPage("unknow error") { }
-//
-//            STATE_LOADING -> LoadingPage()
-//        }
-//
-//    }
-
-    @Composable
-//    fun DeviceItem(device: BtDevice?) {
-//        Card(
-//            shape = RoundedCornerShape(20.dp),
-//            elevation = CardDefaults.elevatedCardElevation(30.dp),
-//            modifier = Modifier
-//                .background(Color.Transparent)
-//                .fillMaxSize(),
-//        ) {
-//            Column(
-//                modifier = Modifier
-//                    .background(Color.White)
-//            ) {
-//                Box(
-//                    modifier = Modifier
-//                        .size(410.dp),
-//                    contentAlignment = Alignment.BottomEnd
-//                ) {
-//                    Image(
-//                        painter = painterResource(id = R.drawable.ic_bluetooth),
-//                        contentDescription = "",
-//                        contentScale = ContentScale.Crop,
-//                        modifier = Modifier
-//                            .size(110.dp)
-//                            .clip(RoundedCornerShape(0, 0, 0, 0))
-//                    )
-//                    Text(
-//                        text = "${device?.realName}",
-//                        modifier = Modifier
-//                            .padding(15.dp)
-//                            .fillMaxSize()
-//                    )
-//                    Text(
-//                        text = "信号：${device?.rssi}",
-//                        modifier = Modifier
-//                            .padding(15.dp)
-//                            .fillMaxSize()
-//                    )
-//                }
-//            }
-//        }
-//    }
-
-//    @Composable
-//    fun LoadingPage(context: Context = LocalContext.current) {
-//        val animate by rememberInfiniteTransition().animateFloat(
-//            initialValue = 0f,
-//            targetValue = 360f,
-//            animationSpec = infiniteRepeatable(
-//                tween(500, easing = LinearEasing),
-//                RepeatMode.Restart
-//            )
-//        )
-//        val radius = context.dp2px(80f)
-//        Canvas(modifier = Modifier.fillMaxSize()) {
-//            translate(size.width / 2 - radius, size.height / 2 - radius) {
-//                drawArc(
-//                    Color.Green,
-//                    0f,
-//                    animate,
-//                    false,
-//                    size = Size(radius * 2f, radius * 2f),
-//                    style = Stroke(context.dp2px(4f)),
-//                    alpha = 0.6f
-//                )
-//            }
-//        }
-//    }
-
     fun Context.dp2px(dp: Float): Float {
         val density = resources.displayMetrics.density
         return dp * density + 0.5f
-    }
-
-    @Composable
-    fun ErrorPage(msg: String, onclick: () -> Unit = {}) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                modifier = Modifier.size(300.dp, 180.dp),
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "",
-                contentScale = ContentScale.Crop
-            )
-            Button(modifier = Modifier.padding(8.dp), onClick = onclick) {
-                Text(text = "网络异常：$msg")
-            }
-        }
     }
 
     private fun downloadFile(imgUrl: String?) {
@@ -441,12 +300,6 @@ class BletoothActivity : AppCompatActivity() {
                     *(arr)
                 )
             }
-            EasyPermissions.requestPermissions(
-                this,
-                "申请权限",
-                1001,
-                *(arr)
-            )
         }
     }
 
@@ -459,5 +312,10 @@ class BletoothActivity : AppCompatActivity() {
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    override fun onDestroy() {
+        BtHelper.updateCurrentInfo = null
+        ToastUtil.ctx = null
+        super.onDestroy()
+    }
 }
 
