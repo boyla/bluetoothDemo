@@ -1,6 +1,7 @@
 package com.upbetter.bt
 
 import android.Manifest.permission.*
+import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -30,6 +31,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.upbetter.App
 import com.upbetter.bt.bt.BtHelper
 import com.upbetter.bt.util.ToastUtil
@@ -43,13 +46,20 @@ class BletoothActivity : AppCompatActivity() {
     lateinit var downloadManager: DownloadManager
     var permissions = mutableListOf<String>()
     var hasPermission = false
-    lateinit var tv: TextView
+    lateinit var tvName: TextView
+    lateinit var tvMac: TextView
+    lateinit var tvSum: TextView
+    lateinit var rvDevice: RecyclerView
+    lateinit var adp: DeviceAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ToastUtil.ctx = this
         setContentView(R.layout.activity_bt)
-        tv = findViewById(R.id.tv)
+        tvName = findViewById(R.id.tvName)
+        tvMac = findViewById(R.id.tvMac)
+        tvSum = findViewById(R.id.tvSum)
+        rvDevice = findViewById(R.id.rvDevice)
         findViewById<Button>(R.id.btnScan).setOnClickListener {
             scanBluetooth()
         }
@@ -60,6 +70,7 @@ class BletoothActivity : AppCompatActivity() {
         registerReceiver(downloadrReceiver, intentfilter)
     }
 
+    @SuppressLint("SetTextI18n")
     private fun scanBluetooth() {
         checkPermissions()
         val locationOn = isLocationOn()
@@ -68,13 +79,13 @@ class BletoothActivity : AppCompatActivity() {
             return
         }
         if (hasPermission) {
+            rvDevice.layoutManager = LinearLayoutManager(this)
+            adp = DeviceAdapter(this, BtHelper.deviceLi)
+            rvDevice.adapter = adp
             BtHelper.scan(App.getInstance()!!.applicationContext) {
-                tv.post {
-                    var str = ""
-                    for (device in BtHelper.deviceLi) {
-                        str += device.name + " rssi: ${device.rssi}\n" + device.address + "\n\n"
-                    }
-                    tv.text = str
+                rvDevice.post {
+                    adp.notifyDataSetChanged()
+                    tvSum.text = "" + BtHelper.deviceLi.size
                 }
             }
         } else {

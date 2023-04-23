@@ -3,12 +3,17 @@ package com.upbetter.bt.bt
 import android.content.Context
 import android.util.Log
 import com.inuker.bluetooth.library.BluetoothClient
+import com.inuker.bluetooth.library.Code.REQUEST_SUCCESS
+import com.inuker.bluetooth.library.Constants.STATUS_CONNECTED
+import com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED
 import com.inuker.bluetooth.library.beacon.Beacon
+import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener
 import com.inuker.bluetooth.library.connect.listener.BluetoothStateListener
 import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.search.response.SearchResponse
-import java.lang.String
+import java.util.concurrent.CopyOnWriteArrayList
+
 
 const val STATE_IDLE = 0
 const val STATE_LOADING = 1
@@ -20,13 +25,14 @@ object BtHelper {
 
     lateinit var mClient: BluetoothClient
     var mLoadState = STATE_IDLE
-    var deviceLi = mutableListOf<SearchResult>()
+    var deviceLi = CopyOnWriteArrayList<SearchResult>()
+    var currentConnectDevice: SearchResult? = null
     fun scan(appCtx: Context, onListUpdate: () -> Unit) {
         deviceLi.clear()
         onListUpdate()
         val request = SearchRequest.Builder()
 //            .searchBluetoothLeDevice(5000) // 先扫BLE设备3次，每次3s
-            .searchBluetoothClassicDevice(5000) // 再扫经典蓝牙5s
+            .searchBluetoothClassicDevice(10000) // 再扫经典蓝牙5s
 //            .searchBluetoothLeDevice(5000)
 //            .searchBluetoothClassicDevice(5000)
 //            .searchBluetoothLeDevice(2000) // 再扫BLE设备2s
@@ -56,7 +62,16 @@ object BtHelper {
                         beacon.toString()
                     )
                 )
-                deviceLi.add(found)
+                if (deviceLi.size == 0) {
+                    deviceLi.add(found)
+                } else {
+                    for ((i, e) in deviceLi.withIndex()) {
+                        if (found.rssi >= e.rssi) {
+                            deviceLi.add(i, found)
+                            break
+                        }
+                    }
+                }
                 onListUpdate()
             }
 
@@ -80,5 +95,31 @@ object BtHelper {
 
     fun closeBt() {
         mClient.closeBluetooth();
+    }
+
+    fun connect(ret: SearchResult, onSuccess: (() -> Unit)? = null, onFail: (() -> Unit)? = null) {
+        mClient.registerConnectStatusListener(ret.address, object : BleConnectStatusListener() {
+            override fun onConnectStatusChanged(mac: String?, status: Int) {
+                if (status == STATUS_CONNECTED) {
+                    currentConnectDevice = ret
+                } else if (status == STATUS_DISCONNECTED) {
+                    currentConnectDevice = null
+                }
+            }
+        })
+
+        mClient.connect(
+            ret.address
+        ) { code, profile ->
+            if (code == REQUEST_SUCCESS) {
+                onSuccess?.invoke()
+            } else {
+                onFail?.invoke()
+            }
+        }
+    }
+
+    fun disconnect(ret: SearchResult) {
+        mClient.disconnect(ret.address)
     }
 }
