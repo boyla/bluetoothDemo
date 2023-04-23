@@ -8,172 +8,231 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.database.Cursor
 import android.graphics.BitmapFactory
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.text.TextUtils
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.widget.Button
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import com.upbetter.bt.bt.BtUtils
-import com.upbetter.bt.bt.STATE_ERROR
-import com.upbetter.bt.bt.STATE_IDLE
-import com.upbetter.bt.bt.STATE_LOADING
-import com.upbetter.bt.data.BtDevice
+import com.upbetter.App
+import com.upbetter.bt.bt.BtHelper
 import com.upbetter.bt.util.ToastUtil
 import kotlinx.coroutines.launch
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
 
-class BletoothActivity : ComponentActivity() {
+class BletoothActivity : AppCompatActivity() {
 
     val TAG = "BletoothActivity"
     lateinit var downloadManager: DownloadManager
-    lateinit var vm: BtModel
     var permissions = mutableListOf<String>()
+    var hasPermission = false
+    lateinit var tv: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ToastUtil.ctx = this
-        setContent {
-            vm = BtModel(application)
-            MaterialTheme {
-                checkPermissions()
-            }
+        setContentView(R.layout.activity_bt)
+        tv = findViewById(R.id.tv)
+        findViewById<Button>(R.id.btnScan).setOnClickListener {
+            scanBluetooth()
         }
+
         //注册广播，监听下载状态
         val intentfilter = IntentFilter()
         intentfilter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         registerReceiver(downloadrReceiver, intentfilter)
     }
 
-    @Composable
-    fun BtDeviceList(vm: BtModel) {
-        val li by vm.btDevices.collectAsState()
-        if (li.size > 0) {
-            BtUtils.mLoadState = STATE_IDLE
+    private fun scanBluetooth() {
+        checkPermissions()
+        val locationOn = isLocationOn()
+        if (!locationOn) {
+            ToastUtil.showToast(this, "无法扫描蓝牙设备，请打开定位开关")
+            return
         }
-        when (BtUtils.mLoadState) {
-            STATE_IDLE -> LazyColumn(
-                modifier = Modifier
-                    .background(
-                        color = Color(
-                            0xf5f5f5
-                        )
-                    )
-                    .padding(0.dp, 0.dp)
-                    .clipToBounds()
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-            ) {
-                items(li.size) { item ->
-                    DeviceItem(li[item])
+        if (hasPermission) {
+            BtHelper.scan(App.getInstance()!!.applicationContext) {
+                tv.post {
+                    var str = ""
+                    for (device in BtHelper.deviceLi) {
+                        str += device.name + " rssi: ${device.rssi}\n" + device.address + "\n\n"
+                    }
+                    tv.text = str
                 }
             }
-
-            STATE_ERROR -> ErrorPage("unknow error") { }
-
-            STATE_LOADING -> LoadingPage()
+        } else {
+            ToastUtil.showToast(this, "请开启蓝牙和定位权限")
         }
-
     }
+
+    private fun isLocationOn(): Boolean {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val gpsOn = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        Log.d(TAG, "isLocationOn GPS_PROVIDER enable: $gpsOn")
+        if (gpsOn) {
+            return true
+        }
+        val netOn = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        Log.d(TAG, "isLocationOn NETWORK_PROVIDER enable: $netOn")
+        if (netOn) {
+            return true
+        }
+        return false
+    }
+
+//    @Composable
+//    fun BtDeviceList(vm: BtModel) {
+////        lifecycleScope.launchWhenStarted{
+////            vm.btDevices.collect { li ->
+////                Log.d(BtUtils.TAG, "render BtDeviceList size: ${li.size}")
+////                if (li.size > 0) {
+////                    BtUtils.mLoadState = STATE_IDLE
+////                }
+////                when (BtUtils.mLoadState) {
+////                    STATE_IDLE -> LazyColumn(
+////                        modifier = Modifier
+////                            .background(
+////                                color = Color(
+////                                    0xf5f5f5
+////                                )
+////                            )
+////                            .padding(0.dp, 0.dp)
+////                            .clipToBounds()
+////                            .fillMaxSize(),
+////                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
+////                        verticalArrangement = Arrangement.spacedBy(20.dp),
+////                    ) {
+////                        items(li.size) { item ->
+////                            DeviceItem(li[item])
+////                        }
+////                    }
+////
+////                    STATE_ERROR -> ErrorPage("unknow error") { }
+////
+////                    STATE_LOADING -> LoadingPage()
+////                }
+////            }
+////        }
+//
+//        val li by vm.btDevices.collectAsState()
+////        val li = remember {
+////            rawli
+////        }
+//        Log.d(BtUtils.TAG, "render BtDeviceList size: ${li.size}")
+//        if (li.size > 0) {
+//            BtUtils.mLoadState = STATE_IDLE
+//        }
+//        when (BtUtils.mLoadState) {
+//            STATE_IDLE -> LazyColumn(
+//                modifier = Modifier
+//                    .background(
+//                        color = Color(
+//                            0xf5f5f5
+//                        )
+//                    )
+//                    .padding(0.dp, 0.dp)
+//                    .clipToBounds()
+//                    .fillMaxSize(),
+//                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
+//                verticalArrangement = Arrangement.spacedBy(20.dp),
+//            ) {
+//                items(li.size) { item ->
+//                    DeviceItem(li[item])
+//                }
+//            }
+//
+//            STATE_ERROR -> ErrorPage("unknow error") { }
+//
+//            STATE_LOADING -> LoadingPage()
+//        }
+//
+//    }
 
     @Composable
-    fun DeviceItem(device: BtDevice?) {
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.elevatedCardElevation(30.dp),
-            modifier = Modifier
-                .background(Color.Transparent)
-                .fillMaxSize(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .background(Color.White)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(410.dp),
-                    contentAlignment = Alignment.BottomEnd
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_bluetooth),
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(110.dp)
-                            .clip(RoundedCornerShape(0, 0, 0, 0))
-                    )
-                    Text(
-                        text = "${device?.name}",
-                        modifier = Modifier
-                            .padding(15.dp)
-                            .fillMaxSize()
-                    )
-                    Text(
-                        text = "${device?.mac}",
-                        modifier = Modifier
-                            .padding(15.dp)
-                            .fillMaxSize()
-                    )
-                }
-            }
-        }
-    }
+//    fun DeviceItem(device: BtDevice?) {
+//        Card(
+//            shape = RoundedCornerShape(20.dp),
+//            elevation = CardDefaults.elevatedCardElevation(30.dp),
+//            modifier = Modifier
+//                .background(Color.Transparent)
+//                .fillMaxSize(),
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .background(Color.White)
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(410.dp),
+//                    contentAlignment = Alignment.BottomEnd
+//                ) {
+//                    Image(
+//                        painter = painterResource(id = R.drawable.ic_bluetooth),
+//                        contentDescription = "",
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier
+//                            .size(110.dp)
+//                            .clip(RoundedCornerShape(0, 0, 0, 0))
+//                    )
+//                    Text(
+//                        text = "${device?.realName}",
+//                        modifier = Modifier
+//                            .padding(15.dp)
+//                            .fillMaxSize()
+//                    )
+//                    Text(
+//                        text = "信号：${device?.rssi}",
+//                        modifier = Modifier
+//                            .padding(15.dp)
+//                            .fillMaxSize()
+//                    )
+//                }
+//            }
+//        }
+//    }
 
-    @Composable
-    fun LoadingPage(context: Context = LocalContext.current) {
-        val animate by rememberInfiniteTransition().animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(
-                tween(500, easing = LinearEasing),
-                RepeatMode.Restart
-            )
-        )
-        val radius = context.dp2px(80f)
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            translate(size.width / 2 - radius, size.height / 2 - radius) {
-                drawArc(
-                    Color.Green,
-                    0f,
-                    animate,
-                    false,
-                    size = Size(radius * 2f, radius * 2f),
-                    style = Stroke(context.dp2px(4f)),
-                    alpha = 0.6f
-                )
-            }
-        }
-    }
+//    @Composable
+//    fun LoadingPage(context: Context = LocalContext.current) {
+//        val animate by rememberInfiniteTransition().animateFloat(
+//            initialValue = 0f,
+//            targetValue = 360f,
+//            animationSpec = infiniteRepeatable(
+//                tween(500, easing = LinearEasing),
+//                RepeatMode.Restart
+//            )
+//        )
+//        val radius = context.dp2px(80f)
+//        Canvas(modifier = Modifier.fillMaxSize()) {
+//            translate(size.width / 2 - radius, size.height / 2 - radius) {
+//                drawArc(
+//                    Color.Green,
+//                    0f,
+//                    animate,
+//                    false,
+//                    size = Size(radius * 2f, radius * 2f),
+//                    style = Stroke(context.dp2px(4f)),
+//                    alpha = 0.6f
+//                )
+//            }
+//        }
+//    }
 
     fun Context.dp2px(dp: Float): Float {
         val density = resources.displayMetrics.density
@@ -336,8 +395,7 @@ class BletoothActivity : ComponentActivity() {
 //                    context.startActivity(installIntent)
 //                }
 
-    // todo 蓝牙动态申请权限
-    @Composable
+    //  蓝牙申请权限
     private fun checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 版本大于等于 Android12 时
@@ -345,15 +403,18 @@ class BletoothActivity : ComponentActivity() {
             permissions.add(BLUETOOTH_SCAN)
             permissions.add(BLUETOOTH_ADVERTISE)
             permissions.add(BLUETOOTH_CONNECT)
+
+            permissions.add(BLUETOOTH)
+            permissions.add(BLUETOOTH_ADMIN)
         } else {
             // Android 版本小于 Android12 及以下版本
-            permissions.add(ACCESS_COARSE_LOCATION)
-            permissions.add(ACCESS_FINE_LOCATION)
         }
+        permissions.add(ACCESS_COARSE_LOCATION)
+        permissions.add(ACCESS_FINE_LOCATION)
         val arr = permissions.toTypedArray()
         if (permissions.size > 0) {
             if (EasyPermissions.hasPermissions(this, *(arr))) {
-                BtDeviceList(vm)
+                hasPermission = true
             } else {
                 // 没有申请过权限，现在去申请
                 /**
@@ -366,19 +427,15 @@ class BletoothActivity : ComponentActivity() {
                     this,
                     "申请权限",
                     1001,
-                    *(arr))
-//                for (per in permissions) {
-//                    EasyPermissions.requestPermissions(
-//                        this,
-//                        "申请权限",
-//                        1001,
-//                        per)
-//                    ActivityCompat.requestPermissions(this, arrayOf(per), 1001)
-//                }
-
-
-                ErrorPage(msg = "请开启蓝牙权限")
+                    *(arr)
+                )
             }
+            EasyPermissions.requestPermissions(
+                this,
+                "申请权限",
+                1001,
+                *(arr)
+            )
         }
     }
 
