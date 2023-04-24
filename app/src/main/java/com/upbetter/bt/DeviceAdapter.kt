@@ -20,7 +20,7 @@ class DeviceAdapter(private val context: Context, private val data: List<SearchR
         holder.tvMac.text = data[pos].address
         holder.tvRssi.text = "" + data[pos].rssi
         val isThisConnect =
-            TextUtils.equals(BtHelper.currentConnectDevice?.address, data[pos].address)
+            BtHelper.currentConnects.contains(data[pos])
         if (isThisConnect) {
             holder.btnConnect.setBackgroundResource(R.drawable.btn_red_bg)
             holder.btnConnect.text = "断开连接"

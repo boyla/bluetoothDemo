@@ -20,16 +20,8 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -46,8 +38,7 @@ class BletoothActivity : AppCompatActivity() {
     lateinit var downloadManager: DownloadManager
     var permissions = mutableListOf<String>()
     var hasPermission = false
-    lateinit var tvName: TextView
-    lateinit var tvMac: TextView
+    lateinit var tvLi: TextView
     lateinit var tvSum: TextView
     lateinit var rvDevice: RecyclerView
     lateinit var adp: DeviceAdapter
@@ -57,8 +48,7 @@ class BletoothActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         ToastUtil.ctx = this
         setContentView(R.layout.activity_bt)
-        tvName = findViewById(R.id.tvName)
-        tvMac = findViewById(R.id.tvMac)
+        tvLi = findViewById(R.id.tvLi)
         tvSum = findViewById(R.id.tvSum)
         rvDevice = findViewById(R.id.rvDevice)
         findViewById<Button>(R.id.btnScan).setOnClickListener {
@@ -84,18 +74,12 @@ class BletoothActivity : AppCompatActivity() {
             adp = DeviceAdapter(this, BtHelper.deviceLi)
             rvDevice.adapter = adp
             BtHelper.updateCurrentInfo = {
-                tvName.text = BtHelper.currentConnectDevice?.name ?: ""
-                tvMac.text = BtHelper.currentConnectDevice?.address ?: ""
-                if (currentPos != -1) {
-                    adp.notifyItemChanged(currentPos)
+                var str = ""
+                for (device in BtHelper.currentConnects) {
+                    str += device.name + " : " + device.address + "\n"
                 }
-                if (BtHelper.currentConnectDevice != null) {
-                    for ((i, e) in BtHelper.deviceLi.withIndex()) {
-                        if (e == BtHelper.currentConnectDevice) {
-                            adp.notifyItemChanged(i)
-                        }
-                    }
-                }
+                tvLi.text = str.trim()
+                adp.notifyDataSetChanged()
             }
             BtHelper.scan(App.getInstance()!!.applicationContext) {
                 rvDevice.post {

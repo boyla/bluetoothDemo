@@ -27,7 +27,7 @@ object BtHelper {
     lateinit var mClient: BluetoothClient
     var mLoadState = STATE_IDLE
     var deviceLi = CopyOnWriteArrayList<SearchResult>()
-    var currentConnectDevice: SearchResult? = null
+    var currentConnects = mutableListOf<SearchResult>()
     fun scan(appCtx: Context, onListUpdate: () -> Unit) {
         deviceLi.clear()
         onListUpdate()
@@ -104,16 +104,24 @@ object BtHelper {
     }
 
     fun connect(ret: SearchResult, onSuccess: (() -> Unit)? = null, onFail: (() -> Unit)? = null) {
+        if (currentConnects.contains(ret)) {
+            ToastUtil.showToast(ToastUtil.ctx!!, "${ret.name} 已连接")
+            return
+        }
         mClient.registerConnectStatusListener(ret.address, object : BleConnectStatusListener() {
             override fun onConnectStatusChanged(mac: String?, status: Int) {
                 if (status == STATUS_CONNECTED) {
-                    currentConnectDevice = ret
-                    Log.d(TAG, "onConnectStatusChanged STATUS_CONNECTED")
-                    ToastUtil.showToast(ToastUtil.ctx!!,"连接成功")
+                    if (!currentConnects.contains(ret)) {
+                        currentConnects.add(ret)
+                    }
+                    Log.d(TAG, "onConnectStatusChanged STATUS_CONNECTED ${ret.address}")
+                    ToastUtil.showToast(ToastUtil.ctx!!, "${ret.name} 连接成功")
                 } else if (status == STATUS_DISCONNECTED) {
-                    currentConnectDevice = null
-                    ToastUtil.showToast(ToastUtil.ctx!!,"连接断开")
-                    Log.d(TAG, "onConnectStatusChanged STATUS_DISCONNECTED")
+                    if (currentConnects.contains(ret)) {
+                        ToastUtil.showToast(ToastUtil.ctx!!, "${ret.name} 连接断开")
+                        currentConnects.remove(ret)
+                    }
+                    Log.d(TAG, "onConnectStatusChanged STATUS_DISCONNECTED ${ret.address}")
                 }
                 updateCurrentInfo?.invoke()
             }
@@ -134,5 +142,9 @@ object BtHelper {
 
     fun disconnect(ret: SearchResult) {
         mClient.disconnect(ret.address)
+    }
+
+    fun test() {
+        mClient
     }
 }
