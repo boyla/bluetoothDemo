@@ -108,6 +108,9 @@ object BtHelper {
             ToastUtil.showToast(ToastUtil.ctx!!, "${ret.name} 已连接")
             return
         }
+        for (d in currentConnects) {
+            disconnect(d)
+        }
         mClient.registerConnectStatusListener(ret.address, object : BleConnectStatusListener() {
             override fun onConnectStatusChanged(mac: String?, status: Int) {
                 if (status == STATUS_CONNECTED) {
