@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#22a8f1"
+    android:background="@color/app_theme_color"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
     <FrameLayout
@@ -16,72 +17,69 @@
         <LinearLayout
             android:id="@+id/llLogin"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="22dp"
             android:gravity="center"
             android:orientation="horizontal">
 
             <View
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:background="@drawable/ic_login" />
 
             <TextView
                 android:id="@+id/tvLogin"
+                style="@style/topTxtStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="3dp"
-                android:text="登陆"
-                android:textColor="@color/white"
-                android:textSize="18dp" />
+                android:text="登陆" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/llUpdate"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="22dp"
             android:layout_gravity="right"
             android:gravity="center"
             android:orientation="horizontal">
 
             <View
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:background="@drawable/ic_update" />
 
             <TextView
+                style="@style/topTxtStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="3dp"
-                android:text="软件更新"
-                android:textColor="@color/white"
-                android:textSize="18dp" />
+                android:text="软件更新" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/llLanguage"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="22dp"
             android:layout_gravity="left|bottom"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
+                style="@style/topTxtStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="选择语言"
-                android:textColor="@color/white"
-                android:textSize="18dp" />
+                android:text="选择语言" />
 
             <View
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:background="@drawable/ic_arrow_down" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/llConnect"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="22dp"
             android:layout_gravity="right|bottom"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -93,11 +91,10 @@
                 android:background="@drawable/ic_bt_white" />
 
             <TextView
+                style="@style/topTxtStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="点击连接设备"
-                android:textColor="@color/white"
-                android:textSize="18dp" />
+                android:text="点击连接设备" />
 
             <View
                 android:layout_width="22dp"
@@ -105,6 +102,14 @@
                 android:background="@drawable/ic_arrow_right" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/tvConnectInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="当前未连接设备"
+            android:textColor="@color/white" />
     </FrameLayout>
 
     <LinearLayout
@@ -120,64 +125,66 @@
             android:orientation="horizontal">
 
             <LinearLayout
+                android:id="@+id/ll1"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_video" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="演示"
-                    android:textColor="@color/white" />
+                    android:text="演示" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll2"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="42dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_record" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="读取记录"
-                    android:textColor="@color/white" />
+                    android:text="读取记录" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll3"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_lock" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="智能锁"
-                    android:textColor="@color/white" />
+                    android:text="智能锁" />
             </LinearLayout>
 
 
@@ -190,64 +197,64 @@
             android:orientation="horizontal">
 
             <LinearLayout
+                android:id="@+id/ll4"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_time" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="加热时间"
-                    android:textColor="@color/white" />
+                    android:text="加热时间" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll5"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="42dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="wrap_content"
                     android:background="@null"
                     android:src="@drawable/ic_type" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="光纤类型"
-                    android:textColor="@color/white" />
+                    android:text="光纤类型" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll6"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="wrap_content"
                     android:background="@null"
                     android:src="@drawable/ic_elec" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="放点校正"
-                    android:textColor="@color/white" />
+                    android:text="放点校正" />
             </LinearLayout>
 
 
@@ -259,64 +266,64 @@
             android:orientation="horizontal">
 
             <LinearLayout
+                android:id="@+id/ll7"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_dash" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="光功模块"
-                    android:textColor="@color/white" />
+                    android:text="光功模块" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll8"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="42dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_setting" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="设置"
-                    android:textColor="@color/white" />
+                    android:text="设置" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll9"
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@null"
                     android:src="@drawable/ic_help" />
 
                 <TextView
+                    style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="售后服务"
-                    android:textColor="@color/white" />
+                    android:text="售后服务" />
             </LinearLayout>
 
 
@@ -325,19 +332,40 @@
     </LinearLayout>
 
     <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp">
+
+        <View
+            android:id="@+id/vLightSwitch"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:background="@drawable/ic_light_off" />
+    </FrameLayout>
+
+    <LinearLayout
         android:id="@+id/llBottom"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:background="#30000000"
-        android:padding="16dp">
+        android:layout_height="90dp"
+        android:gravity="end|center_vertical"
+        android:orientation="horizontal"
+        android:paddingRight="25dp">
+
+        <View
+            android:id="@+id/vLogo"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/ic_app" />
+
         <TextView
             android:id="@+id/tvBottom"
-            android:drawableStart="@drawable/ic_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right|bottom"
-            android:text="同芯熔接机\nversion:1.0.0 "
-            android:textColor="@color/white" />
-    </FrameLayout>
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginLeft="10dp"
+            android:text="同芯熔接机\nV1.0.0 "
+            android:textColor="@color/white"
+            android:textSize="12dp" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -28,6 +28,7 @@ object BtHelper {
     var mLoadState = STATE_IDLE
     var deviceLi = CopyOnWriteArrayList<SearchResult>()
     var currentConnects = mutableListOf<SearchResult>()
+    val statusChangeListeners = mutableListOf<() -> Unit>()
     fun scan(appCtx: Context, onListUpdate: () -> Unit) {
         deviceLi.clear()
         onListUpdate()
@@ -111,22 +112,26 @@ object BtHelper {
         for (d in currentConnects) {
             disconnect(d)
         }
-        mClient.registerConnectStatusListener(ret.address, object : BleConnectStatusListener() {
+        val address = ret.address
+        val name = ret.name
+        mClient.registerConnectStatusListener(address, object : BleConnectStatusListener() {
             override fun onConnectStatusChanged(mac: String?, status: Int) {
                 if (status == STATUS_CONNECTED) {
                     if (!currentConnects.contains(ret)) {
                         currentConnects.add(ret)
                     }
                     Log.d(TAG, "onConnectStatusChanged STATUS_CONNECTED ${ret.address}")
-                    ToastUtil.showToast(ToastUtil.ctx!!, "${ret.name} 连接成功")
+                    ToastUtil.showToast(ToastUtil.ctx!!, "$name 连接成功")
                 } else if (status == STATUS_DISCONNECTED) {
                     if (currentConnects.contains(ret)) {
-                        ToastUtil.showToast(ToastUtil.ctx!!, "${ret.name} 连接断开")
+                        ToastUtil.showToast(ToastUtil.ctx!!, "$name 连接断开")
                         currentConnects.remove(ret)
                     }
                     Log.d(TAG, "onConnectStatusChanged STATUS_DISCONNECTED ${ret.address}")
                 }
-                updateCurrentInfo?.invoke()
+                for (lis in statusChangeListeners) {
+                    lis.invoke()
+                }
             }
         })
 
@@ -141,7 +146,15 @@ object BtHelper {
         }
     }
 
-    var updateCurrentInfo: (() -> Unit)? = null
+    fun registOnStatusChange(onChange: () -> Unit) {
+        statusChangeListeners.add(onChange)
+    }
+
+    fun unregistOnStatusChange(onChange: () -> Unit) {
+        statusChangeListeners.remove(onChange)
+    }
+
+//    var updateCurrentInfo: (() -> Unit)? = null
 
     fun disconnect(ret: SearchResult) {
         mClient.disconnect(ret.address)

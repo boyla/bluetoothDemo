@@ -42,7 +42,7 @@ class BletoothActivity : AppCompatActivity() {
     lateinit var tvSum: TextView
     lateinit var rvDevice: RecyclerView
     lateinit var adp: DeviceAdapter
-    var currentPos = -1
+    lateinit var statusListener: () -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +59,7 @@ class BletoothActivity : AppCompatActivity() {
         val intentfilter = IntentFilter()
         intentfilter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         registerReceiver(downloadrReceiver, intentfilter)
+        scanBluetooth()
     }
 
     @SuppressLint("SetTextI18n")
@@ -73,7 +74,7 @@ class BletoothActivity : AppCompatActivity() {
             rvDevice.layoutManager = LinearLayoutManager(this)
             adp = DeviceAdapter(this, BtHelper.deviceLi)
             rvDevice.adapter = adp
-            BtHelper.updateCurrentInfo = {
+            statusListener = {
                 var str = ""
                 for (device in BtHelper.currentConnects) {
                     str += device.name + " : " + device.address + "\n"
@@ -81,6 +82,8 @@ class BletoothActivity : AppCompatActivity() {
                 tvLi.text = str.trim()
                 adp.notifyDataSetChanged()
             }
+            statusListener.invoke()
+            BtHelper.registOnStatusChange(statusListener)
             BtHelper.scan(App.getInstance()!!.applicationContext) {
                 rvDevice.post {
                     adp.notifyDataSetChanged()
@@ -297,9 +300,10 @@ class BletoothActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        BtHelper.updateCurrentInfo = null
+        BtHelper.unregistOnStatusChange(statusListener)
         ToastUtil.ctx = null
         super.onDestroy()
+        unregisterReceiver(downloadrReceiver)
     }
 }
 

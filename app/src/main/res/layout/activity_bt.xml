@@ -63,7 +63,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="15dp"
         android:background="@drawable/btn_enable_bg"
-        android:text="开始扫描"
+        android:text="扫描"
         android:textColor="@color/white" />
 
 </LinearLayout>

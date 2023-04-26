@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
         ) {
             Image(
                 modifier = Modifier.size(300.dp, 180.dp),
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.ic_bluetooth),
                 contentDescription = "",
                 contentScale = ContentScale.Crop
             )

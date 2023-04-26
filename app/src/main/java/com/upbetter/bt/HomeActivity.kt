@@ -1,7 +1,6 @@
 package com.upbetter.bt
 
 import android.Manifest.permission.*
-import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,102 +8,135 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.database.Cursor
 import android.graphics.BitmapFactory
-import android.location.LocationManager
+import android.graphics.Outline
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.text.TextUtils
 import android.util.Log
-import android.widget.Button
+import android.view.View
+import android.view.ViewOutlineProvider
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.upbetter.App
+import com.inuker.bluetooth.library.search.SearchResult
 import com.upbetter.bt.bt.BtHelper
 import com.upbetter.bt.util.ToastUtil
 import kotlinx.coroutines.launch
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
 
+
 class HomeActivity : AppCompatActivity() {
 
     val TAG = "HomeActivity"
     lateinit var downloadManager: DownloadManager
-    var permissions = mutableListOf<String>()
-    var hasPermission = false
-    lateinit var tvLi: TextView
-    lateinit var tvSum: TextView
-    lateinit var rvDevice: RecyclerView
-    lateinit var adp: DeviceAdapter
-    var currentPos = -1
+    lateinit var vLogo: View
+    lateinit var vLightSwitch: View
+    lateinit var tvConnectInfo: TextView
+    var lightOn = false
+    lateinit var statusListener: () -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ToastUtil.ctx = this
         setContentView(R.layout.activity_home)
-        tvLi = findViewById(R.id.tvLi)
-        tvSum = findViewById(R.id.tvSum)
-        rvDevice = findViewById(R.id.rvDevice)
-        findViewById<Button>(R.id.btnScan).setOnClickListener {
-            scanBluetooth()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.statusBarColor = resources.getColor(R.color.app_theme_color) //设置状态栏颜色
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR //实现状态栏图标和文字颜色为暗色
         }
-
+        tvConnectInfo = findViewById(R.id.tvConnectInfo)
+        vLogo = findViewById(R.id.vLogo)
+        vLightSwitch = findViewById(R.id.vLightSwitch)
+        vLightSwitch.setOnClickListener {
+            lightOn = !lightOn
+            vLightSwitch.keepScreenOn = lightOn
+            vLightSwitch.setBackgroundResource(if (lightOn) R.drawable.ic_light_on else R.drawable.ic_light_off)
+            ToastUtil.showToast(this, "已${if (lightOn) "开启" else "关闭"}屏幕常亮")
+        }
+        vLogo.setClipToOutline(true)
+        vLogo.setOutlineProvider(object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, 16f)
+            }
+        })
+        findViewById<View>(R.id.llUpdate).setOnClickListener {
+            downloadFile("http://124.223.197.120:83/chfs/shared/jay/%E4%B8%80%E8%B7%AF%E5%90%91%E5%8C%97.flac")
+            ToastUtil.showToast(this, "下载测试文件")
+        }
+        findViewById<View>(R.id.llConnect).setOnClickListener {
+            startActivity(Intent(this, BletoothActivity::class.java))
+        }
+        findViewById<View>(R.id.ll1).setOnClickListener {
+            ToastUtil.showToast(this, "演示操作教学")
+        }
+        findViewById<View>(R.id.ll2).setOnClickListener {
+            checkAndThen {
+                // todo record
+            }
+        }
+        findViewById<View>(R.id.ll3).setOnClickListener {
+            checkAndThen {
+                // todo lock
+            }
+        }
+        findViewById<View>(R.id.ll4).setOnClickListener {
+            checkAndThen {
+                // todo time
+            }
+        }
+        findViewById<View>(R.id.ll5).setOnClickListener {
+            checkAndThen {
+                // todo type
+            }
+        }
+        findViewById<View>(R.id.ll6).setOnClickListener {
+            checkAndThen {
+                // todo check point
+            }
+        }
+        findViewById<View>(R.id.ll7).setOnClickListener {
+            checkAndThen {
+                // todo model
+            }
+        }
+        findViewById<View>(R.id.ll8).setOnClickListener {
+            checkAndThen {
+                // todo setting
+            }
+        }
+        findViewById<View>(R.id.ll9).setOnClickListener {
+            ToastUtil.showToast(this, "售后服务")
+        }
         //注册广播，监听下载状态
         val intentfilter = IntentFilter()
         intentfilter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         registerReceiver(downloadrReceiver, intentfilter)
+
+        statusListener = {
+            if (BtHelper.currentConnects.size == 0) {
+                tvConnectInfo.text = "当前未连接设备"
+            } else {
+                val device = BtHelper.currentConnects[0]
+                tvConnectInfo.text = "${device.name + " : " + device.address} \n已连接"
+            }
+        }
+        BtHelper.registOnStatusChange(statusListener)
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun scanBluetooth() {
-        checkPermissions()
-        val locationOn = isLocationOn()
-        if (!locationOn) {
-            ToastUtil.showToast(this, "无法扫描蓝牙设备，请打开定位开关")
-            return
-        }
-        if (hasPermission) {
-            rvDevice.layoutManager = LinearLayoutManager(this)
-            adp = DeviceAdapter(this, BtHelper.deviceLi)
-            rvDevice.adapter = adp
-            BtHelper.updateCurrentInfo = {
-                var str = ""
-                for (device in BtHelper.currentConnects) {
-                    str += device.name + " : " + device.address + "\n"
-                }
-                tvLi.text = str.trim()
-                adp.notifyDataSetChanged()
-            }
-            BtHelper.scan(App.getInstance()!!.applicationContext) {
-                rvDevice.post {
-                    adp.notifyDataSetChanged()
-                    tvSum.text = "" + BtHelper.deviceLi.size
-                }
-            }
+    private fun checkAndThen(then: (bt: SearchResult) -> Unit) {
+        if (BtHelper.currentConnects.size == 0) {
+            ToastUtil.showToast(this, "请连接熔接机后再操作")
         } else {
-            ToastUtil.showToast(this, "请开启蓝牙和定位权限")
+            val device = BtHelper.currentConnects[0]
+            ToastUtil.showToast(this, "熔接机${device.name}已连接，开始操作")
+            then(device)
         }
-    }
-
-    private fun isLocationOn(): Boolean {
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val gpsOn = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        Log.d(TAG, "isLocationOn GPS_PROVIDER enable: $gpsOn")
-        if (gpsOn) {
-            return true
-        }
-        val netOn = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        Log.d(TAG, "isLocationOn NETWORK_PROVIDER enable: $netOn")
-        if (netOn) {
-            return true
-        }
-        return false
     }
 
     fun Context.dp2px(dp: Float): Float {
@@ -123,26 +155,8 @@ class HomeActivity : AppCompatActivity() {
         //创建下载任务,downloadUrl就是下载链接
         val request = DownloadManager.Request(Uri.parse(url))
         //指定下载路径和下载文件名
-        val subPath = "/bg/" + url.substring(url.indexOf("="))
-        val jpgPath = subPath + ".jpg"
-        val pngPath = subPath + ".png"
+        val subPath = "" + url.substring(url.lastIndexOf("/") + 1)
         var exist = false
-        val jpgFile = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            jpgPath
-        )
-        if (jpgFile.exists()) {
-            Log.d(TAG, "jpgFile exists")
-            exist = true
-        }
-        val pngFile = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            pngPath
-        )
-        if (pngFile.exists()) {
-            Log.d(TAG, "pngFile exists")
-            exist = true
-        }
         val imgFile = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             subPath
@@ -239,54 +253,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-//                if (!TextUtils.isEmpty(filename)) {
-//                    val installIntent = Intent(Intent.ACTION_VIEW)
-//                    installIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//                    installIntent.setDataAndType(
-//                        Uri.fromFile(File(filename)),
-//                        "application/vnd.android.package-archive"
-//                    )
-//                    context.startActivity(installIntent)
-//                }
-
-    //  蓝牙申请权限
-    private fun checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 版本大于等于 Android12 时
-            // 只包括蓝牙这部分的权限，其余的需要什么权限自己添加
-            permissions.add(BLUETOOTH_SCAN)
-            permissions.add(BLUETOOTH_ADVERTISE)
-            permissions.add(BLUETOOTH_CONNECT)
-
-            permissions.add(BLUETOOTH)
-            permissions.add(BLUETOOTH_ADMIN)
-        } else {
-            // Android 版本小于 Android12 及以下版本
-        }
-        permissions.add(ACCESS_COARSE_LOCATION)
-        permissions.add(ACCESS_FINE_LOCATION)
-        val arr = permissions.toTypedArray()
-        if (permissions.size > 0) {
-            if (EasyPermissions.hasPermissions(this, *(arr))) {
-                hasPermission = true
-            } else {
-                // 没有申请过权限，现在去申请
-                /**
-                 *@param host Context对象
-                 *@param rationale  权限弹窗上的提示语。
-                 *@param requestCode 请求权限的唯一标识码
-                 *@param perms 一系列权限
-                 */
-                EasyPermissions.requestPermissions(
-                    this,
-                    "申请权限",
-                    1001,
-                    *(arr)
-                )
-            }
-        }
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -296,10 +262,21 @@ class HomeActivity : AppCompatActivity() {
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    override fun onResume() {
+        super.onResume()
+//        if (BtHelper.currentConnects.size == 0) {
+//            tvConnectInfo.text = "当前未连接设备"
+//        } else {
+//            val device = BtHelper.currentConnects[0]
+//            tvConnectInfo.text = "熔接机 ${device.name} 已连接"
+//        }
+    }
+
     override fun onDestroy() {
-        BtHelper.updateCurrentInfo = null
+        BtHelper.unregistOnStatusChange(statusListener)
         ToastUtil.ctx = null
         super.onDestroy()
+        unregisterReceiver(downloadrReceiver)
     }
 }
 
