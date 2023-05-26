@@ -82,7 +82,7 @@
             android:id="@+id/llConnect"
             android:layout_width="wrap_content"
             android:layout_height="22dp"
-            android:layout_gravity="right|bottom"
+            android:layout_gravity="center|bottom"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             tools:ignore="RtlHardcoded">
