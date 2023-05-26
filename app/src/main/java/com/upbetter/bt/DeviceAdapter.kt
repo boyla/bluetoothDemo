@@ -2,11 +2,11 @@ package com.upbetter.bt
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.inuker.bluetooth.library.search.SearchResult
@@ -19,6 +19,7 @@ class DeviceAdapter(private val context: Context, private val data: List<SearchR
         holder.tvName.text = data[pos].name
         holder.tvMac.text = data[pos].address
         holder.tvRssi.text = "" + data[pos].rssi
+        holder.ivIcon.setBackgroundResource(BtHelper.getDeviceType(data[pos]))
         val isThisConnect =
             BtHelper.currentConnects.contains(data[pos])
         if (isThisConnect) {
@@ -31,7 +32,7 @@ class DeviceAdapter(private val context: Context, private val data: List<SearchR
             holder.btnConnect.setBackgroundResource(R.drawable.btn_enable_bg)
             holder.btnConnect.text = "连接"
             holder.btnConnect.setOnClickListener {
-                BtHelper.connect(data[pos])
+                BtHelper.connect(data[pos], onSuccess = { BtHelper.callbackDevice = it })
             }
         }
     }
@@ -50,5 +51,6 @@ class DeviceAdapter(private val context: Context, private val data: List<SearchR
         val tvMac = view.findViewById<TextView>(R.id.tv_mac_address)
         val tvRssi = view.findViewById<TextView>(R.id.tv_rssi)
         val btnConnect = view.findViewById<Button>(R.id.btnConnect)
+        val ivIcon = view.findViewById<ImageView>(R.id.ivIcon)
     }
 }

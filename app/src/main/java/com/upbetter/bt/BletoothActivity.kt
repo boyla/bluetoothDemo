@@ -3,6 +3,7 @@ package com.upbetter.bt
 import android.Manifest.permission.*
 import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -253,6 +254,7 @@ class BletoothActivity : AppCompatActivity() {
 //                }
 
     //  蓝牙申请权限
+    @SuppressLint("MissingPermission")
     private fun checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 版本大于等于 Android12 时
@@ -287,6 +289,12 @@ class BletoothActivity : AppCompatActivity() {
                     *(arr)
                 )
             }
+        }
+//        ActivityCompat.requestPermissions(this, arr, 1001)
+        if (BtHelper.bluetoothAdapter == null || !BtHelper.bluetoothAdapter.isEnabled) {
+            ToastUtil.showToast(this, "请打开蓝牙开关")
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBtIntent, 1001)
         }
     }
 

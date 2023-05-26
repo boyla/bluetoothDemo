@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tool="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -32,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="3dp"
-                android:text="登陆" />
+                android:text="@string/login" />
         </LinearLayout>
 
         <LinearLayout
@@ -53,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="3dp"
-                android:text="软件更新" />
+                android:text="@string/update" />
         </LinearLayout>
 
         <LinearLayout
@@ -62,13 +63,14 @@
             android:layout_height="22dp"
             android:layout_gravity="left|bottom"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <TextView
                 style="@style/topTxtStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="选择语言" />
+                android:text="@string/select_lang" />
 
             <View
                 android:layout_width="22dp"
@@ -94,7 +96,7 @@
                 style="@style/topTxtStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="点击连接设备" />
+                android:text="@string/connedt_device" />
 
             <View
                 android:layout_width="22dp"
@@ -108,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="当前未连接设备"
+            android:text="@string/state_disconnect"
             android:textColor="@color/white" />
     </FrameLayout>
 
@@ -143,7 +145,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="演示" />
+                    android:text="@string/guide" />
             </LinearLayout>
 
             <LinearLayout
@@ -164,7 +166,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="读取记录" />
+                    android:text="@string/sync_record" />
             </LinearLayout>
 
             <LinearLayout
@@ -184,7 +186,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="智能锁" />
+                    android:text="@string/lock_device" />
             </LinearLayout>
 
 
@@ -213,7 +215,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="加热时间" />
+                    android:text="@string/heat" />
             </LinearLayout>
 
             <LinearLayout
@@ -234,7 +236,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="光纤类型" />
+                    android:text="@string/fiber_type" />
             </LinearLayout>
 
             <LinearLayout
@@ -254,7 +256,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="放点校正" />
+                    android:text="@string/elec_discharge" />
             </LinearLayout>
 
 
@@ -282,7 +284,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="光功模块" />
+                    android:text="@string/function_module" />
             </LinearLayout>
 
             <LinearLayout
@@ -303,7 +305,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="设置" />
+                    android:text="@string/settings" />
             </LinearLayout>
 
             <LinearLayout
@@ -323,7 +325,7 @@
                     style="@style/itemTxtStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="售后服务" />
+                    android:text="@string/customer_service" />
             </LinearLayout>
 
 
@@ -357,15 +359,29 @@
             android:layout_height="28dp"
             android:background="@drawable/ic_app" />
 
-        <TextView
-            android:id="@+id/tvBottom"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|center_vertical"
             android:layout_marginLeft="10dp"
-            android:text="同芯熔接机\nV1.0.0 "
-            android:textColor="@color/white"
-            android:textSize="12dp" />
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/corp_name"
+                android:textColor="@color/white"
+                android:textSize="12dp" />
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="12dp" />
+        </LinearLayout>
+
+
     </LinearLayout>
 
 </LinearLayout>

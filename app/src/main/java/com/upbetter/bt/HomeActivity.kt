@@ -1,11 +1,13 @@
 package com.upbetter.bt
 
 import android.Manifest.permission.*
+import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.graphics.Outline
@@ -41,6 +43,7 @@ class HomeActivity : AppCompatActivity() {
     var lightOn = false
     lateinit var statusListener: () -> Unit
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ToastUtil.ctx = this
@@ -49,6 +52,12 @@ class HomeActivity : AppCompatActivity() {
             window.statusBarColor = resources.getColor(R.color.app_theme_color) //设置状态栏颜色
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR //实现状态栏图标和文字颜色为暗色
+        }
+        try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            findViewById<TextView>(R.id.tvVersion).text = "V" + pInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
         }
         tvConnectInfo = findViewById(R.id.tvConnectInfo)
         vLogo = findViewById(R.id.vLogo)
@@ -120,10 +129,11 @@ class HomeActivity : AppCompatActivity() {
 
         statusListener = {
             if (BtHelper.currentConnects.size == 0) {
-                tvConnectInfo.text = "当前未连接设备"
+                tvConnectInfo.text = getString(R.string.state_disconnect)
             } else {
                 val device = BtHelper.currentConnects[0]
-                tvConnectInfo.text = "${device.name + " : " + device.address} \n已连接"
+                tvConnectInfo.text =
+                    "${device.name + " : " + device.address} \n${getString(R.string.state_connected)}"
             }
         }
         BtHelper.registOnStatusChange(statusListener)
